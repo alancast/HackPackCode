@@ -59,6 +59,7 @@ int yawStopSpeed = 90; //value to stop the yaw motor - keep this at 90
 int rollMoveSpeed = 90; //this variable is the speed controller for the continuous movement of the ROLL servo motor. It is added or subtracted from the rollStopSpeed, so 0 would mean full speed rotation in one direction, and 180 means full rotation in the other. Keep this at 90 for best performance / highest torque from the roll motor when firing.
 int rollStopSpeed = 90; //value to stop the roll motor - keep this at 90
 
+float yawPrecisionPerDegree = 3.4; // this variable represents the time in milliseconds that the YAW motor will remain at it's set movement speed to rotate 1 degree.
 int yawPrecision = 100; // this variable represents the time in milliseconds that the YAW motor will remain at it's set movement speed. Try values between 50 and 500 to start (500 milliseconds = 1/2 second)
 int shakePrecision = 25; // this variable represents the time in milliseconds for the smaller shake movement
 int rollPrecision = 270; // this variable represents the time in milliseconds that the ROLL motor with remain at it's set movement speed. If this ROLL motor is spinning more or less than 1/6th of a rotation when firing a single dart (one call of the fire(); command) you can try adjusting this value down or up slightly, but it should remain around the stock value (270) for best results.
@@ -71,8 +72,9 @@ void shakeHeadYes(int nods = 3);
 void shakeHeadNo(int nods = 3);
 void fire(int darts = 1);
 void rapidFire(int darts = 6);
-void bootyShake(int shakes = 8, int shakeWidth = 4, int shakeDelay = 0);
-void danceMove(int half = 4 , int full = 8);
+void bootyShake(int shakes = 8, int shakeDegrees = 15, int shakeDelay = 30);
+void spinAndShakeButt();
+void lookUpAndSpin();
 void handleNumberGuess(int guess);
 
 //////////////////////////////////////////////////
@@ -256,7 +258,7 @@ void handleCommand(int command) {
             } else if (numberGuessingMode) {
                 handleNumberGuess(3);
             } else {
-              bootyShake();
+              lookUpAndSpin();
             }
             break;
 
@@ -270,7 +272,7 @@ void handleCommand(int command) {
             } else if (numberGuessingMode) {
                 handleNumberGuess(4);
             } else {
-              danceMove();
+              spinAndShakeButt();
             }
             break;
 
@@ -358,7 +360,19 @@ void leftMove(int moves){
         delay(5); //delay for smoothness
         Serial.println("LEFT");
   }
+}
 
+// Function for rotating left a certain amount of degrees
+// This function is very buggy, didn't do actual math, just took guesses so doesn't really work
+void rotateLeft(float degrees){
+    Serial.print("Rotating LEFT ");
+    Serial.print(degrees);
+    Serial.println(" degrees");
+
+    yawServo.write(yawStopSpeed + yawMoveSpeed); // adding the servo speed = 180 (full counterclockwise rotation speed)
+    delay(yawPrecisionPerDegree * degrees); // stay rotating for a certain number of milliseconds
+    yawServo.write(yawStopSpeed); // stop rotating
+    delay(5); //delay for smoothness
 }
 
 void rightMove(int moves){ // function to move right
@@ -369,6 +383,19 @@ void rightMove(int moves){ // function to move right
       delay(5);
       Serial.println("RIGHT");
   }
+}
+
+// Function for rotating right a certain amount of degrees
+// This function is very buggy, didn't do actual math, just took guesses so doesn't really work
+void rotateRight(float degrees){
+    Serial.print("Rotating RIGHT ");
+    Serial.print(degrees);
+    Serial.println(" degrees");
+
+    yawServo.write(yawStopSpeed - yawMoveSpeed); // adding the servo speed = 180 (full counterclockwise rotation speed)
+    delay(yawPrecisionPerDegree * degrees); // stay rotating for a certain number of milliseconds
+    yawServo.write(yawStopSpeed); // stop rotating
+    delay(5); //delay for smoothness
 }
 
 void upMove(int moves){
@@ -486,56 +513,59 @@ void shakeHeadNo(int nods = 3) {
     }
 }
 
-void danceMove(int half, int full) {
-    // Careful, this dance is sure to attract those that are binary!
-    // Calculate the duration for a half turn and full turn (best effort since it's a modified 360 degree servo)
-    int halfTurnMoves = half; // 4 moves'ish for a half turn
-    int fullTurnMoves = full; // 8 moves'ish for a full turn
+// Function to spin around and stick butt up and shake it
+void spinAndShakeButt() {
     homeServos();
+
     // Turn around 180 degrees (half turn)
-    for (int i = 0; i < halfTurnMoves; i++) {
-        yawServo.write(yawStopSpeed + yawMoveSpeed); // Counterclockwise rotation
-        delay(yawPrecision);
-        yawServo.write(yawStopSpeed); // Stop rotation
-        delay(5);
-    }
+    rotateLeft(180);
+
+    // stick butt up (look down)
     delay(100);
-    upMove(7); // "head" down
+    pitchServo.write(45); // look down to 45 degree
     delay(300);
+
     // Perform booty shake
     bootyShake();
     delay(100);
-    downMove(7);
-    pitchServo.write(100); // home servo
-    delay(300);
 
-    // Return to original position
-    for (int i = 0; i < halfTurnMoves; i++) {
-        yawServo.write(yawStopSpeed - yawMoveSpeed); // Clockwise rotation back to start
-        delay(yawPrecision);
-        yawServo.write(yawStopSpeed); // Stop rotation
-        delay(5);
-    }
+    // Stick head back up and turn back around
+    pitchServo.write(100); // look back up to 100 degrees
+    delay(300);
+    rotateRight(180);
 }
 
 // Function for having turrt do a booty shake!
-void bootyShake(int shakes, int shakeWidth, int shakeDelay) {
-    int width = shakeWidth; // Number of moves for a small shake
+void bootyShake(int shakes, int shakeDegrees, int shakeDelay) {
     // Pulsate back and forth (booty shake)
     for (int i = 0; i < shakes; i++) {
-        for (int j = 0; j < width; j++) { // left shakeWidth
-            yawServo.write(yawStopSpeed + yawMoveSpeed);
-            delay(shakePrecision);
-            yawServo.write(yawStopSpeed);
-            delay(shakeDelay);
-        }
-        for (int j = 0; j < width; j++) { // right shakeWidth
-            yawServo.write(yawStopSpeed - yawMoveSpeed);
-            delay(shakePrecision);
-            yawServo.write(yawStopSpeed);
-            delay(shakeDelay);
-        }
+        // shake left
+        rotateLeft(shakeDegrees);
+
+        // shake right
+        // The servo rotates slower to the right for some reason while shaking, so this adjustment fixes that
+        float rightRotateAdjustment = .7;
+        rotateRight(rightRotateAdjustment * shakeDegrees);
+
+        // slight delay before next shake to make sure shaking in place
+        delay(shakeDelay);
     }
+}
+
+// Function to look up and spin around!
+void lookUpAndSpin() {
+    // look up
+    delay(100);
+    pitchServo.write(145); // look up to 145 degree
+    delay(300);
+
+    // spin around
+    rotateRight(540);
+    rotateLeft(540);
+
+    // Look back down to normal
+    pitchServo.write(100);
+    delay(300);
 }
 
 void handleNumberGuess(int guess) {
