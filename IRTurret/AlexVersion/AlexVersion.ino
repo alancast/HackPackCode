@@ -59,7 +59,7 @@ int yawStopSpeed = 90; //value to stop the yaw motor - keep this at 90
 int rollMoveSpeed = 90; //this variable is the speed controller for the continuous movement of the ROLL servo motor. It is added or subtracted from the rollStopSpeed, so 0 would mean full speed rotation in one direction, and 180 means full rotation in the other. Keep this at 90 for best performance / highest torque from the roll motor when firing.
 int rollStopSpeed = 90; //value to stop the roll motor - keep this at 90
 
-float yawPrecisionPerDegree = 3.4; // this variable represents the time in milliseconds that the YAW motor will remain at it's set movement speed to rotate 1 degree.
+float yawPrecisionPerDegree = 2.9; // this variable represents the time in milliseconds that the YAW motor will remain at it's set movement speed to rotate 1 degree.
 int yawPrecision = 100; // this variable represents the time in milliseconds that the YAW motor will remain at it's set movement speed. Try values between 50 and 500 to start (500 milliseconds = 1/2 second)
 int shakePrecision = 25; // this variable represents the time in milliseconds for the smaller shake movement
 int rollPrecision = 270; // this variable represents the time in milliseconds that the ROLL motor with remain at it's set movement speed. If this ROLL motor is spinning more or less than 1/6th of a rotation when firing a single dart (one call of the fire(); command) you can try adjusting this value down or up slightly, but it should remain around the stock value (270) for best results.
@@ -544,7 +544,7 @@ void bootyShake(int shakes, int shakeDegrees, int shakeDelay) {
 
         // shake right
         // The servo rotates slower to the right for some reason while shaking, so this adjustment fixes that
-        float rightRotateAdjustment = .7;
+        float rightRotateAdjustment = .9;
         rotateRight(rightRotateAdjustment * shakeDegrees);
 
         // slight delay before next shake to make sure shaking in place
